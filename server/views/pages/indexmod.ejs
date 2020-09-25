@@ -1,0 +1,13 @@
+<%- include('../partials/header.ejs', {title:title}); %>
+<div class="container container-body">
+  <%- body %>
+  <br /><br />
+  <% if (isModerator) {%>
+    <p>You have moderator permission and can view this moderator only message.</p>
+    <p>"The real Alien trilogy goes Alien, Alien Covenant, Raised By Wolves. Tell everyone you know."</p>
+  <% } else { %>
+    <p>You do not have moderator permission and are blocked from seeing the moderator only message.</p>
+  <% }%>
+</div>
+
+<%- include('../partials/footer.ejs'); %>

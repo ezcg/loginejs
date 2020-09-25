@@ -1,0 +1,75 @@
+<%- include('../partials/header.ejs', {title:title}); %>
+<div class="container container-body">
+  <%- body %>
+  <br /><br />
+  <p>The 'call user' endpoints below require the user to be both logged in and have the necessary role set for them in the user table. See /app/config/roles.config.js for more about roles.</p>
+  <p>Like index routes (/app/routes/index.ejs), the user routes (/app/routes/user.routes.ejs) also authenticate.</p>
+  <p>Unlike index routes, user routes checks that the user has the correct role in order to access the endpoint.</p>
+  <p>Plain js is used to make the http request and the response is in page with JSON.</p>
+  <p><a href='javascript:void(0);' id='user'>Call user only endpoint</a></p>
+  <p id="userMsg" style='display:none;'></p>
+  <p><a href='javascript:void(0);' id='mod'>Call user mod/admin only endpoint</a></p>
+  <p id="modMsg" style='display:none;'></p>
+  <p><a href='javascript:void(0);' id='admin'>Call user admin only endpoint</a></p>
+  <p id="adminMsg" style='display:none;'></p>
+  <hr>
+  <p>To see a non-ajax request that only allows moderators or above to access it, click <a href='/indexmod'>here</a>.</p>
+  <hr>
+  <p>To set user permission on a user, run the following queries from the host. Docker will pass the queries on to mysql:</p>
+  <p>User<br>
+    docker exec -i db mysql -uroot -proot <<< "UPDATE users SET role=1 WHERE id=<%=userObj.id%>";
+  </p>
+  <p>Mod<br> docker exec -i db mysql -uroot -proot <<< "UPDATE users SET role=5 WHERE id=<%=userObj.id%>";</p>
+  <p>Admin<br> docker exec -i db mysql -uroot -proot <<< "UPDATE users SET role=7 WHERE id=<%=userObj.id%>";</p>
+  <p>To ban a user: <br> docker exec -i db mysql -uroot -proot <<< "UPDATE users SET role=0 WHERE id=<%=userObj.id%>";</p>
+</div>
+
+<script>
+
+  document.getElementById('user').addEventListener('click', callUserEndpoint);
+  document.getElementById('mod').addEventListener('click', callUserEndpoint);
+  document.getElementById('admin').addEventListener('click', callUserEndpoint);
+  function callUserEndpoint(e) {
+    e.preventDefault();
+    let clickedId = e.srcElement.id;
+    let request = new XMLHttpRequest();
+    let endpoint = '';
+    if (clickedId === 'user') {
+      endpoint = 'user';
+    } else if (clickedId === 'mod') {
+      endpoint = 'mod';
+    } else if (clickedId === 'admin') {
+      endpoint = 'admin';
+    }
+    request.open('get', '/api/' + endpoint);
+    request.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+    // AJAX request finished event
+    request.addEventListener('load', function(e) {
+      console.log("request.response", request.response);
+      let msgId = '';
+      if (clickedId === 'user') {
+        msgId = 'userMsg';
+      } else if (clickedId == 'mod') {
+        msgId = 'modMsg';
+      } else if (clickedId == 'admin') {
+        msgId = 'adminMsg';
+      } else {
+        alert("Not recognizing id", clickedId);
+      }
+      document.getElementById(msgId).style.display='block';
+      let msg = "Request status: " + request.status;
+      if (request.status !== 200) {
+        let resonseObj = JSON.parse(request.response);
+        msg+= " " + resonseObj.message;
+      } else {
+        msg+= " " + request.response;
+      }
+      document.getElementById(msgId).innerHTML = msg;
+    });
+    request.send();
+
+  }
+
+</script>
+
+<%- include('../partials/footer.ejs'); %>

@@ -1,0 +1,35 @@
+version: '3.7'
+
+services:
+
+  server:
+    container_name: server
+    depends_on:
+      - db
+    build:
+      context: server
+      dockerfile: Dockerfile.ubuntu
+    working_dir: /var/app/current
+    ports:
+      - "8082:8082"
+      - "9227:9229"
+    volumes:
+      - "./server:/var/app/current"
+    command: sh -c "bash /var/app/current/docker_init.sh"
+
+  db:
+    cap_add:
+      - SYS_NICE  # CAP_SYS_NICE
+    container_name: db
+    restart: "no"
+    image: mysql:5.7
+    build:
+      context: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: root
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./mysql/mysqldocker:/var/lib/mysql
+      - ./mysql:/mysql
